@@ -1,1 +1,1 @@
-# Jeux_de_la_vie
+# Jeu_de_la_vie
