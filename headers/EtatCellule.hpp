@@ -9,5 +9,4 @@ class EtatCellule {
         virtual EtatCellule* calculerProchainEtat(int nbVoisinsVivants) const = 0;
 };
 
-
 #endif
