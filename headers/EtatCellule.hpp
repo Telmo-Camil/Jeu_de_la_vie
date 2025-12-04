@@ -4,7 +4,7 @@
 #include "Cellule.hpp"
 
 class EtatCellule {
-    private : 
+    public : 
         virtual bool estVivante() const = 0;
         virtual EtatCellule* calculerProchainEtat(int nbVoisinsVivants) const = 0;
 };
