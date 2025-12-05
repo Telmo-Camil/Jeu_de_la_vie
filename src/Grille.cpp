@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "StrategieRegles.hpp"
+#include "../headers/StrategieRegles.hpp"
 
 class Cellule
 {

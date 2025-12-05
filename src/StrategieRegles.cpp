@@ -1,6 +1,6 @@
 
 
-#include "StrategieRegles.hpp"
+#include "../headers/StrategieRegles.hpp"
 
 class ReglesConwayClassique : public StrategieRegles
 {
