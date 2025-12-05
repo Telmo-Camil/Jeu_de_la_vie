@@ -1,7 +1,7 @@
 #ifndef CELLULE_HPP
 #define CELLULE_HPP
 
-#include "EtatCellule.hpp"
+class EtatCellule;
 
 class Cellule {
     private: 

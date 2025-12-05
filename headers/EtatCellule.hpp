@@ -1,8 +1,6 @@
 #ifndef ETATCELLULE_HPP
 #define ETATCELLULE_HPP
 
-#include "Cellule.hpp"
-
 class EtatCellule {
     public : 
         virtual ~EtatCellule() = default;

@@ -1,33 +1,21 @@
-# --- Variables de Base ---
 CXX = g++
 TARGET = main
+CXXFLAGS = -g -Wall -Werror -std=c++17 -I./headers
+LDFLAGS =
+LDLIBS = -lsfml-graphics -lsfml-window -lsfml-system
 
-# --- Drapeaux de Compilation (CXXFLAGS) ---
-CXXFLAGS = -g -Wall -Werror -std=c++11
-
-# --- Librairies (LDLIBS) et chemins (LDFLAGS/IFLAGS) ---
-IFLAGS = 
-LDFLAGS = 
-LDLIBS = -lsfml-graphics -lsfml-window -lsfml-system $(LDFLAGS)
-
-# --- Découverte des Fichiers Sources (Correction du chemin) ---
-# Exclusion des répertoires .git et .ccls-cache
-EXCLUDE_DIRS = -path ./.git -prune -o -path ./.ccls-cache -prune -o
-SRCS = $(shell find . $(EXCLUDE_DIRS) -type f -name '*.cpp' -print)
-HEADERS = $(shell find . $(EXCLUDE_DIRS) -type f -name '*.h' -print -o -type f -name '*.hpp' -print)
-
-
-# --- Cibles ---
+SRCS = $(shell find ./src -type f -name '*.cpp') main.cpp
+HEADERS = $(shell find ./headers -type f -name '*.hpp' -o -name '*.h')
 
 .PHONY: all clean debug
 
 all: $(TARGET)
 
 $(TARGET): $(SRCS) $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(SRCS) -o $@ $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 debug: $(SRCS) $(HEADERS)
-	$(CXX) $(CXXFLAGS) -U_FORTIFY_SOURCE -O0 -D_DEBUG $(IFLAGS) $(SRCS) -o $(TARGET)-debug $(LDLIBS)
+	$(CXX) $(CXXFLAGS) -O0 -D_DEBUG $(SRCS) -o $(TARGET)-debug $(LDFLAGS) $(LDLIBS)
 
 clean:
 	rm -f $(TARGET) $(TARGET)-debug *.o

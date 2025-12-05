@@ -1,7 +1,2 @@
-
-
-#include "EtatCellule.hpp"
-
-
-EtatCellule::~EtatCellule() {} 
+#include "EtatCellule.hpp" 
 

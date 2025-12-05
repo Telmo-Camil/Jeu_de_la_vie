@@ -4,6 +4,8 @@
 #include <iostream>
 #include "../headers/StrategieRegles.hpp"
 
+
+
 Grille::Grille(int l, int h)
     : largeur(l), hauteur(h), regles(nullptr)
 {
@@ -11,7 +13,10 @@ Grille::Grille(int l, int h)
 
     for (int y = 0; y < hauteur; y++)
         for (int x = 0; x < largeur; x++)
-            cellules[y][x] = new EtatMort();
+        {
+            cellules[y][x] = new Cellule();
+            cellules[y][x]->setEtat(new EtatMort());
+        }
 }
 
 Grille::~Grille()
@@ -40,11 +45,10 @@ bool Grille::chargerDepuisFichier(const std::string &chemin)
             int val;
             fichier >> val;
 
-            delete cellules[y][x];
             if (val == 1)
-                cellules[y][x] = new EtatVivant();
+                cellules[y][x]->setEtat(new EtatVivant());
             else
-                cellules[y][x] = new EtatMort();
+                cellules[y][x]->setEtat(new EtatMort());
         }
     }
 
@@ -96,9 +100,10 @@ void Grille::mettreAJour()
                 vivante ? regles->celluleVivanteDoitResterVivante(voisins)
                         : regles->nouvelleCelluleDoitNaitre(voisins);
 
-            nouvelleGrille[y][x] = nouvelleVie ?
-                (Cellule*) new EtatVivant() :
-                (Cellule*) new EtatMort();
+            nouvelleGrille[y][x] = new Cellule();
+            nouvelleGrille[y][x]->setEtat(nouvelleVie ? 
+                (EtatCellule*) new EtatVivant() : 
+                (EtatCellule*) new EtatMort());
         }
     }
 
@@ -161,8 +166,8 @@ void Grille::setCellule(int x, int y, bool etat)
 {
     if (x >= 0 && x < largeur && y >= 0 && y < hauteur)
     {
-        delete cellules[y][x];
-        cellules[y][x] = etat ? (Cellule*) new EtatVivant()
-                              : (Cellule*) new EtatMort();
+        cellules[y][x]->setEtat(etat ? 
+            (EtatCellule*) new EtatVivant() : 
+            (EtatCellule*) new EtatMort());
     }
 }
