@@ -2,7 +2,7 @@
 #define MODESIMULATION_HPP
 
 #include <string>
-#include "grille.hpp"
+#include "Grille.hpp"
 
 class ModeSimulation
 {
