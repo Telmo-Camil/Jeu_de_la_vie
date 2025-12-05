@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "../headers/StrategieRegles.hpp"
 
 Grille::Grille(int l, int h)
     : largeur(l), hauteur(h), regles(nullptr)
