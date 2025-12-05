@@ -5,6 +5,8 @@
 
 class EtatCellule {
     public : 
+        virtual ~EtatCellule() = default;
+
         virtual bool estVivante() const = 0;
         virtual EtatCellule* calculerProchainEtat(int nbVoisinsVivants) const = 0;
 };
