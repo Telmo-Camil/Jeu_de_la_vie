@@ -9,6 +9,7 @@ class Cellule {
 
     public: 
         Cellule();
+        ~Cellule();
         void setEtat(EtatCellule* nouvelEtat);
         bool estVivante();
         void definirProchainEtat(int nbVoisinsVivants);
