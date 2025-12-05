@@ -1,167 +1,167 @@
-
-#include <vector>
-#include <string>
+#include "Grille.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "StrategieRegles.hpp"
 
-class Cellule
+Grille::Grille(int l, int h)
+    : largeur(l), hauteur(h), regles(nullptr)
 {
-public:
-    bool vivante;
+    cellules.resize(hauteur, std::vector<Cellule*>(largeur));
 
-    Cellule() : vivante(false) {}
-    explicit Cellule(bool v) : vivante(v) {}
-};
+    for (int y = 0; y < hauteur; y++)
+        for (int x = 0; x < largeur; x++)
+            cellules[y][x] = new EtatMort();
+}
 
-class Grille
+Grille::~Grille()
 {
-private:
-    int largeur;
-    int hauteur;
-    std::vector<std::vector<Cellule>> cellules;
-    StrategieRegles *regles;
+    for (int y = 0; y < hauteur; y++)
+        for (int x = 0; x < largeur; x++)
+            delete cellules[y][x];
+}
 
-public:
-    Grille(int l, int h)
-        : largeur(l), hauteur(h),
-          cellules(h, std::vector<Cellule>(l, Cellule(false))),
-          regles(nullptr) {}
+bool Grille::chargerDepuisFichier(const std::string &chemin)
+{
+    std::ifstream fichier(chemin);
+    if (!fichier.is_open())
+        return false;
 
-    ~Grille() {}
+    int h, l;
+    fichier >> h >> l;
 
-    bool chargerDepuisFichier(const std::string &chemin)
+    if (h != hauteur || l != largeur)
+        return false;
+
+    for (int y = 0; y < hauteur; y++)
     {
-        std::ifstream fichier(chemin);
-        if (!fichier.is_open())
+        for (int x = 0; x < largeur; x++)
         {
-            return false;
+            int val;
+            fichier >> val;
+
+            delete cellules[y][x];
+            if (val == 1)
+                cellules[y][x] = new EtatVivant();
+            else
+                cellules[y][x] = new EtatMort();
         }
-
-        std::string ligne;
-        int y = 0;
-
-        while (std::getline(fichier, ligne) && y < hauteur)
-        {
-            for (int x = 0; x < largeur && x < ligne.length(); x++)
-            {
-                cellules[y][x].vivante = (ligne[x] == '1' || ligne[x] == 'O' || ligne[x] == '*');
-            }
-            y++;
-        }
-
-        fichier.close();
-        return true;
     }
 
-    int obtenirVoisinsVivants(int x, int y) const
+    return true;
+}
+
+int Grille::obtenirVoisinsVivants(int x, int y) const
+{
+    int count = 0;
+
+    for (int dx = -1; dx <= 1; dx++)
     {
-        int count = 0;
-        for (int dx = -1; dx <= 1; dx++)
+        for (int dy = -1; dy <= 1; dy++)
         {
-            for (int dy = -1; dy <= 1; dy++)
+            if (dx == 0 && dy == 0)
+                continue;
+
+            int nx = x + dx;
+            int ny = y + dy;
+
+            if (nx >= 0 && nx < largeur && ny >= 0 && ny < hauteur)
             {
-                if (dx == 0 && dy == 0)
-                    continue;
-
-                int nx = x + dx;
-                int ny = y + dy;
-
-                if (nx >= 0 && nx < largeur && ny >= 0 && ny < hauteur)
-                {
-                    if (cellules[ny][nx].vivante)
-                        count++;
-                }
+                if (cellules[ny][nx]->estVivante())
+                    count++;
             }
         }
-        return count;
     }
 
-    void mettreAJour()
+    return count;
+}
+
+void Grille::mettreAJour()
+{
+    if (!regles)
+        return;
+
+    std::vector<std::vector<Cellule*>> nouvelleGrille(hauteur, std::vector<Cellule*>(largeur, nullptr));
+
+    for (int y = 0; y < hauteur; y++)
     {
-        if (regles == nullptr)
+        for (int x = 0; x < largeur; x++)
         {
-            return;
+            int voisins = obtenirVoisinsVivants(x, y);
+            Cellule* ancienne = cellules[y][x];
+
+            bool vivante = ancienne->estVivante();
+
+            bool nouvelleVie =
+                vivante ? regles->celluleVivanteDoitResterVivante(voisins)
+                        : regles->nouvelleCelluleDoitNaitre(voisins);
+
+            nouvelleGrille[y][x] = nouvelleVie ?
+                (Cellule*) new EtatVivant() :
+                (Cellule*) new EtatMort();
         }
-
-        std::vector<std::vector<Cellule>> nouvelleGrille = cellules;
-
-        for (int y = 0; y < hauteur; y++)
-        {
-            for (int x = 0; x < largeur; x++)
-            {
-                int voisins = obtenirVoisinsVivants(x, y);
-                bool estVivante = cellules[y][x].vivante;
-
-                if (estVivante)
-                {
-                    nouvelleGrille[y][x].vivante =
-                        regles->celluleVivanteDoitResterVivante(voisins);
-                }
-                else
-                {
-                    nouvelleGrille[y][x].vivante =
-                        regles->nouvelleCelluleDoitNaitre(voisins);
-                }
-            }
-        }
-
-        cellules = nouvelleGrille;
     }
 
-    void afficherConsole() const
+    // libérer ancienne grille
+    for (int y = 0; y < hauteur; y++)
+        for (int x = 0; x < largeur; x++)
+            delete cellules[y][x];
+
+    cellules = nouvelleGrille;
+}
+
+void Grille::afficherConsole() const
+{
+    for (int y = 0; y < hauteur; y++)
     {
-        for (int y = 0; y < hauteur; y++)
+        for (int x = 0; x < largeur; x++)
         {
-            for (int x = 0; x < largeur; x++)
-            {
-                std::cout << (cellules[y][x].vivante ? "■ " : "· ");
-            }
-            std::cout << std::endl;
+            std::cout << (cellules[y][x]->estVivante() ? "■ " : "· ");
         }
         std::cout << std::endl;
     }
+    std::cout << std::endl;
+}
 
-    void sauvegarderDansFichier(std::ostream &sortie) const
+void Grille::sauvegarderDansFichier(std::ostream &sortie) const
+{
+    sortie << hauteur << " " << largeur << "\n";
+
+    for (int y = 0; y < hauteur; y++)
     {
-        for (int y = 0; y < hauteur; y++)
+        for (int x = 0; x < largeur; x++)
         {
-            for (int x = 0; x < largeur; x++)
-            {
-                sortie << (cellules[y][x].vivante ? '1' : '0');
-            }
-            sortie << std::endl;
+            sortie << (cellules[y][x]->estVivante() ? '1' : '0') << " ";
         }
+        sortie << "\n";
     }
+}
 
-    void setRegles(StrategieRegles *r)
+void Grille::setRegles(StrategieRegles *r)
+{
+    regles = r;
+}
+
+StrategieRegles *Grille::getRegles() const
+{
+    return regles;
+}
+
+int Grille::getLargeur() const { return largeur; }
+int Grille::getHauteur() const { return hauteur; }
+
+bool Grille::getCellule(int x, int y) const
+{
+    if (x >= 0 && x < largeur && y >= 0 && y < hauteur)
+        return cellules[y][x]->estVivante();
+    return false;
+}
+
+void Grille::setCellule(int x, int y, bool etat)
+{
+    if (x >= 0 && x < largeur && y >= 0 && y < hauteur)
     {
-        regles = r;
+        delete cellules[y][x];
+        cellules[y][x] = etat ? (Cellule*) new EtatVivant()
+                              : (Cellule*) new EtatMort();
     }
-
-    StrategieRegles *getRegles() const
-    {
-        return regles;
-    }
-
-    int getLargeur() const { return largeur; }
-    int getHauteur() const { return hauteur; }
-
-    bool getCellule(int x, int y) const
-    {
-        if (x >= 0 && x < largeur && y >= 0 && y < hauteur)
-        {
-            return cellules[y][x].vivante;
-        }
-        return false;
-    }
-
-    void setCellule(int x, int y, bool etat)
-    {
-        if (x >= 0 && x < largeur && y >= 0 && y < hauteur)
-        {
-            cellules[y][x].vivante = etat;
-        }
-    }
-};
+}
