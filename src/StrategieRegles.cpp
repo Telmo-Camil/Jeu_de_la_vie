@@ -1,25 +1,14 @@
+#ifndef STRATEGIEREGLES_H
+#define STRATEGIEREGLES_H
 
-
-#include "StrategieRegles.hpp"
-
-class ReglesConwayClassique : public StrategieRegles
+class StrategieRegles
 {
 public:
-    ReglesConwayClassique(){};
+    virtual ~StrategieRegles() = default;
 
-    ~ReglesConwayClassique(){
-        
-    };
+    virtual bool nouvelleCelluleDoitNaitre(int nbVoisinsVivants) const = 0;
 
-    bool nouvelleCelluleDoitNaitre(int nbVoisinsVivants) const
-    {
-
-        return nbVoisinsVivants == 3;
-    }
-    bool celluleVivanteDoitResterVivante(int nbVoisinsVivants) const
-    {
-
-        return nbVoisinsVivants == 2 || nbVoisinsVivants == 3;
-    }
+    virtual bool celluleVivanteDoitResterVivante(int nbVoisinsVivants) const = 0;
 };
 
+#endif
