@@ -171,3 +171,16 @@ void Grille::setCellule(int x, int y, bool etat)
             (EtatCellule*) new EtatMort());
     }
 }
+
+bool Grille::operator==(const Grille& autre) const
+{
+    if (largeur != autre.largeur || hauteur != autre.hauteur)
+        return false;
+    
+    for (int y = 0; y < hauteur; y++)
+        for (int x = 0; x < largeur; x++)
+            if (getCellule(x, y) != autre.getCellule(x, y))
+                return false;
+    
+    return true;
+}

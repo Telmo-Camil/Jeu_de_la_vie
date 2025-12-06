@@ -36,6 +36,9 @@ public:
 
     bool getCellule(int x, int y) const;
     void setCellule(int x, int y, bool etat);
+    
+    // Opérateur de comparaison pour les tests
+    bool operator==(const Grille& autre) const;
 };
 
 #endif

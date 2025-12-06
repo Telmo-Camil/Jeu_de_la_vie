@@ -3,60 +3,33 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
-#include <cmath>
+
+#include "../headers/EtatCellule.hpp" 
+#include "../headers/EtatVivant.hpp"
+#include "../headers/EtatMort.hpp"
+#include "../headers/Grille.hpp"
+#include "../headers/RegleConwayClassique.hpp"
 
 const int cellSize = 10;
 const int gridWidth = 80;
-const int gridHeight = 60;
+const int gridHeight = 80;
 
-struct Cell {
-    bool alive;
-    bool nextState;
-};
-
-std::vector<std::vector<Cell>> grid(gridWidth, std::vector<Cell>(gridHeight, {false, false}));
-
-int countLiveNeighbors(int x, int y) {
-    int count = 0;
-    for (int dx = -1; dx <= 1; ++dx) {
-        for (int dy = -1; dy <= 1; ++dy) {
-            if (dx == 0 && dy == 0) continue;
-            
-            int nx = (x + dx + gridWidth) % gridWidth;
-            int ny = (y + dy + gridHeight) % gridHeight;
-            
-            if (grid[nx][ny].alive) count++;
-        }
-    }
-    return count;
-}
-
-void updateGrid() {
-    for (int x = 0; x < gridWidth; ++x) {
-        for (int y = 0; y < gridHeight; ++y) {
-            int neighbors = countLiveNeighbors(x, y);
-            
-            if (grid[x][y].alive) {
-                grid[x][y].nextState = (neighbors == 2 || neighbors == 3);
-            } else {
-                grid[x][y].nextState = (neighbors == 3);
-            }
-        }
-    }
-    
-    for (int x = 0; x < gridWidth; ++x) {
-        for (int y = 0; y < gridHeight; ++y) {
-            grid[x][y].alive = grid[x][y].nextState;
-        }
-    }
-}
+Grille* grille = nullptr;
 
 void initializeGrid() {
+    if (grille != nullptr) delete grille;
+    grille = new Grille(gridWidth, gridHeight);
+    
+    // Initialiser les règles
+    RegleConwayClassique* regles = new RegleConwayClassique();
+    grille->setRegles(regles);
+    
+    // Remplir aléatoirement
     std::srand(std::time(0));
     for (int x = 0; x < gridWidth; ++x) {
         for (int y = 0; y < gridHeight; ++y) {
-            grid[x][y].alive = (std::rand() % 3 == 0);
-            grid[x][y].nextState = false;
+            bool vivante = (std::rand() % 3 == 0);  // 1/3 vivantes
+            grille->setCellule(x, y, vivante);
         }
     }
 }
@@ -69,7 +42,7 @@ void renderGrid(sf::RenderWindow &window) {
 
     for (int x = 0; x < gridWidth; ++x) {
         for (int y = 0; y < gridHeight; ++y) {
-            if (grid[x][y].alive) {
+            if (grille != nullptr && grille->getCellule(x, y)) {
                 cell.setPosition(x * cellSize, y * cellSize);
                 window.draw(cell);
             }
@@ -80,10 +53,10 @@ void renderGrid(sf::RenderWindow &window) {
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(gridWidth * cellSize, gridHeight * cellSize), "Game of Life");
-    window.setFramerateLimit(15);
+    sf::RenderWindow window(sf::VideoMode(gridWidth * cellSize, gridHeight * cellSize), "Game of Life (SFML)");
+    window.setFramerateLimit(10);  // 10 itérations par seconde
     
-    initializeGrid();
+    initializeGrid(); 
 
     while (window.isOpen()) {
         sf::Event event;
@@ -93,8 +66,17 @@ int main() {
             }
         }
 
-        updateGrid();
+        // Mettre à jour la grille à chaque itération
+        if (grille != nullptr) {
+            grille->mettreAJour();
+        }
+
         renderGrid(window);
+    }
+
+    // Libérer la mémoire
+    if (grille != nullptr) {
+        delete grille;
     }
 
     return 0;
