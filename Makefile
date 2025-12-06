@@ -14,7 +14,7 @@ LDLIBS = -lsfml-graphics -lsfml-window -lsfml-system $(LDFLAGS)
 # --- Découverte des Fichiers Sources ---
 EXCLUDE_DIRS = -path ./.git -prune -o -path ./.ccls-cache -prune -o
 SRCS = $(filter-out ./src/mainTest.cpp,$(shell find ./src -type f -name '*.cpp' -print)) main.cpp
-TEST_SRCS = $(filter-out ./src/mainTest.cpp,$(shell find ./src -type f -name '*.cpp' -print)) test.cpp
+TEST_SRCS = $(filter-out ./src/mainTest.cpp,$(shell find ./src -type f -name '*.cpp' -print)) ./src/TestSimulation.cpp
 HEADERS = $(shell find ./headers -type f -name '*.h' -print -o -type f -name '*.hpp' -print)
 
 
