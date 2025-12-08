@@ -3,13 +3,15 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
+
 #include "../headers/Grille.hpp"
 #include "../headers/RegleConwayClassique.hpp"
 #include "../headers/EtatObstacle.hpp"
+#include "../headers/ModeSimulation.hpp"
 
 const int cellSize = 15;
 const int MAX_ITERATIONS = 200;
-Grille* grille = nullptr;
+Grille* grid = nullptr;
 
 void initializeEnvironment() {
     mkdir("saves", 0777); 
@@ -18,17 +20,17 @@ void initializeEnvironment() {
     int h, l;
     ifs >> h >> l;
     ifs.close();
-    grille = new Grille(l, h);
-    grille->setRegles(new RegleConwayClassique());
-    grille->chargerDepuisFichier("input.txt");
+    grid = new Grille(l, h);
+    grid->setRegles(new RegleConwayClassique());
+    grid->chargerDepuisFichier("input.txt");
 }
 
-int main() {
-    initializeEnvironment();
-    if (!grille) return -1;
-
-    sf::RenderWindow window(sf::VideoMode(grille->getLargeur() * cellSize, grille->getHauteur() * cellSize), "Game of Life - POO");
-    window.setFramerateLimit(10);
+void runGraphicMode() {
+    sf::RenderWindow window(sf::VideoMode(grid->getLargeur() * cellSize, grid->getHauteur() * cellSize), "Game of Life - SFML");
+    
+    // Correction pour l'erreur de sync : on désactive explicitement la vsync avant de limiter les fps
+    window.setVerticalSyncEnabled(false);
+    window.setFramerateLimit(10); 
 
     int currentIteration = 0;
     bool simulationActive = true;
@@ -40,39 +42,31 @@ int main() {
         }
 
         if (simulationActive) {
-            std::string filename = "saves/iteration_" + std::to_string(currentIteration) + ".txt";
-            std::ofstream ofs(filename);
-            if (ofs.is_open()) {
-                grille->sauvegarderDansFichier(ofs);
-                ofs.close();
-            }
+            // Sauvegarde iteration
+            std::ofstream ofs("saves/iteration_" + std::to_string(currentIteration) + ".txt");
+            if (ofs) grid->sauvegarderDansFichier(ofs);
 
-            bool changed = grille->mettreAJour();
+            bool changed = grid->mettreAJour();
             currentIteration++;
 
             if (!changed || currentIteration >= MAX_ITERATIONS) {
-                std::cout << "Simulation terminee." << std::endl;
                 simulationActive = false;
+                std::cout << "Graphique : Simulation stoppee (Stable ou Limite)." << std::endl;
             }
         }
 
         window.clear(sf::Color::Black);
         sf::RectangleShape shape(sf::Vector2f(cellSize - 1.0f, cellSize - 1.0f));
 
-        for (int x = 0; x < grille->getLargeur(); ++x) {
-            for (int y = 0; y < grille->getHauteur(); ++y) {
-                Cellule* cell = grille->getCellulePtr(x, y);
+        for (int x = 0; x < grid->getLargeur(); ++x) {
+            for (int y = 0; y < grid->getHauteur(); ++y) {
+                Cellule* cell = grid->getCellulePtr(x, y);
 
-                // 1. Détection Obstacle (Bleu)
                 if (dynamic_cast<EtatObstacle*>(cell->getEtat())) {
                     shape.setFillColor(sf::Color::Blue);
-                } 
-                // 2. Détection Vivant (Blanc ou Rouge si fini)
-                else if (cell->estVivante()) {
+                } else if (cell->estVivante()) {
                     shape.setFillColor(simulationActive ? sf::Color::White : sf::Color::Red);
-                } 
-                // 3. Mort (Rien à dessiner)
-                else {
+                } else {
                     continue;
                 }
 
@@ -82,7 +76,27 @@ int main() {
         }
         window.display();
     }
+}
 
-    delete grille;
+int main() {
+    int choice;
+    std::cout << "=== MENU JEU DE LA VIE ===" << std::endl;
+    std::cout << "1. Mode Console" << std::endl;
+    std::cout << "2. Mode Graphique" << std::endl;
+    std::cout << "Votre choix : ";
+    std::cin >> choice;
+
+    initializeEnvironment();
+    if (!grid) return -1;
+
+    if (choice == 1) {
+        ModeSimulation::getInstance().lancer(*grid, "input.txt");
+    } else if (choice == 2) {
+        runGraphicMode();
+    } else {
+        std::cout << "Erreur : Choix invalide." << std::endl;
+    }
+
+    delete grid;
     return 0;
 }
