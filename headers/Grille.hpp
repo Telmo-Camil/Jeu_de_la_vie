@@ -24,7 +24,7 @@ public:
     bool chargerDepuisFichier(const std::string& chemin);
 
     int obtenirVoisinsVivants(int x, int y) const;
-    void mettreAJour();
+    bool mettreAJour();
     void afficherConsole() const;
     void sauvegarderDansFichier(std::ostream &sortie) const;
 

@@ -1,50 +1,36 @@
 #include <SFML/Graphics.hpp>
-#include <vector>
-#include <fstream> // Ajout pour lire le fichier
+#include <fstream>
 #include <iostream>
-
+#include <string>
+#include <sys/stat.h>
 #include "../headers/Grille.hpp"
 #include "../headers/RegleConwayClassique.hpp"
 
-const int cellSize = 15; // Ajustez la taille des cellules pour la visibilité
+const int cellSize = 10;
+const int MAX_ITERATIONS = 100; // Limite d'itérations
 Grille* grille = nullptr;
 
-void initializeGrid() {
-    if (grille != nullptr) delete grille;
-
+void initializeEnvironment() {
+    mkdir("saves", 0777); // Création du dossier saves
     std::ifstream ifs("input.txt");
-    if (!ifs.is_open()) {
-        std::cerr << "ERREUR : Impossible d'ouvrir input.txt pour initialisation" << std::endl;
-        return;
-    }
-
+    if (!ifs.is_open()) return;
     int h, l;
-    ifs >> h >> l; // Lire les dimensions depuis le début du fichier
+    ifs >> h >> l;
     ifs.close();
-
-    // Créer la grille avec les dimensions lues
     grille = new Grille(l, h);
-    
-    // Attacher les règles
     grille->setRegles(new RegleConwayClassique());
-    
-    // Charger les états des cellules depuis le fichier
-    if (!grille->chargerDepuisFichier("input.txt")) {
-        std::cerr << "ERREUR : Échec du chargement des données depuis input.txt" << std::endl;
-    }
+    grille->chargerDepuisFichier("input.txt");
 }
 
 int main() {
-    initializeGrid(); // Initialiser d'abord pour avoir les dimensions correctes
+    initializeEnvironment();
+    if (!grille) return -1;
 
-    if (grille == nullptr) return -1;
+    sf::RenderWindow window(sf::VideoMode(grille->getLargeur() * cellSize, grille->getHauteur() * cellSize), "Game of Life");
+    window.setFramerateLimit(10);
 
-    // Créer la fenêtre en fonction de la taille réelle de la grille chargée
-    sf::RenderWindow window(sf::VideoMode(grille->getLargeur() * cellSize, 
-                                          grille->getHauteur() * cellSize), 
-                            "Jeu de la Vie - Chargé depuis input.txt");
-    
-    window.setFramerateLimit(5);
+    int currentIteration = 0;
+    bool simulationActive = true;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -52,17 +38,38 @@ int main() {
             if (event.type == sf::Event::Closed) window.close();
         }
 
-        grille->mettreAJour();
+        if (simulationActive) {
+            // 1. Sauvegarde de l'itération actuelle
+            std::string filename = "saves/iteration_" + std::to_string(currentIteration) + ".txt";
+            std::ofstream ofs(filename);
+            if (ofs.is_open()) {
+                grille->sauvegarderDansFichier(ofs);
+                ofs.close();
+            }
 
+            // 2. Mise à jour et vérification des conditions d'arrêt
+            bool changed = grille->mettreAJour();
+            currentIteration++;
+
+            if (!changed) {
+                std::cout << "Simulation terminee : Grille stable a l'iteration " << currentIteration << std::endl;
+                simulationActive = false;
+            } else if (currentIteration >= MAX_ITERATIONS) {
+                std::cout << "Simulation terminee : Limite de " << MAX_ITERATIONS << " atteint." << std::endl;
+                simulationActive = false;
+            }
+        }
+
+        // Rendu graphique (continue même si la simulation est stoppée pour voir le résultat)
         window.clear(sf::Color::Black);
-        sf::RectangleShape cellShape(sf::Vector2f(cellSize - 1.0f, cellSize - 1.0f));
-        cellShape.setFillColor(sf::Color::White);
+        sf::RectangleShape shape(sf::Vector2f(cellSize - 1.0f, cellSize - 1.0f));
+        shape.setFillColor(simulationActive ? sf::Color::White : sf::Color::Red); // Rouge si fini
 
         for (int x = 0; x < grille->getLargeur(); ++x) {
             for (int y = 0; y < grille->getHauteur(); ++y) {
                 if (grille->getCellule(x, y)) {
-                    cellShape.setPosition(x * cellSize, y * cellSize);
-                    window.draw(cellShape);
+                    shape.setPosition(x * cellSize, y * cellSize);
+                    window.draw(shape);
                 }
             }
         }

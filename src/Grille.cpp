@@ -80,11 +80,12 @@ int Grille::obtenirVoisinsVivants(int x, int y) const
     return count;
 }
 
-void Grille::mettreAJour()
+// Dans Grille.cpp
+bool Grille::mettreAJour()
 {
-    if (!regles)
-        return;
+    if (!regles) return false;
 
+    bool aChange = false; // Indicateur de stabilité
     std::vector<std::vector<Cellule*>> nouvelleGrille(hauteur, std::vector<Cellule*>(largeur, nullptr));
 
     for (int y = 0; y < hauteur; y++)
@@ -92,27 +93,25 @@ void Grille::mettreAJour()
         for (int x = 0; x < largeur; x++)
         {
             int voisins = obtenirVoisinsVivants(x, y);
-            Cellule* ancienne = cellules[y][x];
+            bool vivante = cellules[y][x]->estVivante();
 
-            bool vivante = ancienne->estVivante();
+            bool nouvelleVie = vivante ? regles->celluleVivanteDoitResterVivante(voisins)
+                                       : regles->nouvelleCelluleDoitNaitre(voisins);
 
-            bool nouvelleVie =
-                vivante ? regles->celluleVivanteDoitResterVivante(voisins)
-                        : regles->nouvelleCelluleDoitNaitre(voisins);
+            if (nouvelleVie != vivante) aChange = true;
 
             nouvelleGrille[y][x] = new Cellule();
-            nouvelleGrille[y][x]->setEtat(nouvelleVie ? 
-                (EtatCellule*) new EtatVivant() : 
-                (EtatCellule*) new EtatMort());
+            nouvelleGrille[y][x]->setEtat(nouvelleVie ? (EtatCellule*)new EtatVivant() : (EtatCellule*)new EtatMort());
         }
     }
 
-    // libérer ancienne grille
+    // Libérer l'ancienne grille
     for (int y = 0; y < hauteur; y++)
         for (int x = 0; x < largeur; x++)
             delete cellules[y][x];
 
     cellules = nouvelleGrille;
+    return aChange;
 }
 
 void Grille::afficherConsole() const
