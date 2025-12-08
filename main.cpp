@@ -1,83 +1,74 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include <ctime>
-#include <cstdlib>
+#include <fstream> // Ajout pour lire le fichier
 #include <iostream>
 
-#include "../headers/EtatCellule.hpp" 
-#include "../headers/EtatVivant.hpp"
-#include "../headers/EtatMort.hpp"
 #include "../headers/Grille.hpp"
 #include "../headers/RegleConwayClassique.hpp"
 
-const int cellSize = 10;
-const int gridWidth = 80;
-const int gridHeight = 80;
-
+const int cellSize = 15; // Ajustez la taille des cellules pour la visibilité
 Grille* grille = nullptr;
 
 void initializeGrid() {
     if (grille != nullptr) delete grille;
-    grille = new Grille(gridWidth, gridHeight);
-    
-    // Initialiser les règles
-    RegleConwayClassique* regles = new RegleConwayClassique();
-    grille->setRegles(regles);
-    
-    // Remplir aléatoirement
-    std::srand(std::time(0));
-    for (int x = 0; x < gridWidth; ++x) {
-        for (int y = 0; y < gridHeight; ++y) {
-            bool vivante = (std::rand() % 3 == 0);  // 1/3 vivantes
-            grille->setCellule(x, y, vivante);
-        }
+
+    std::ifstream ifs("input.txt");
+    if (!ifs.is_open()) {
+        std::cerr << "ERREUR : Impossible d'ouvrir input.txt pour initialisation" << std::endl;
+        return;
     }
-}
 
-void renderGrid(sf::RenderWindow &window) {
-    window.clear(sf::Color::Black);
+    int h, l;
+    ifs >> h >> l; // Lire les dimensions depuis le début du fichier
+    ifs.close();
 
-    sf::RectangleShape cell(sf::Vector2f(cellSize - 1.0f, cellSize - 1.0f));
-    cell.setFillColor(sf::Color::White);
-
-    for (int x = 0; x < gridWidth; ++x) {
-        for (int y = 0; y < gridHeight; ++y) {
-            if (grille != nullptr && grille->getCellule(x, y)) {
-                cell.setPosition(x * cellSize, y * cellSize);
-                window.draw(cell);
-            }
-        }
-    }
+    // Créer la grille avec les dimensions lues
+    grille = new Grille(l, h);
     
-    window.display();
+    // Attacher les règles
+    grille->setRegles(new RegleConwayClassique());
+    
+    // Charger les états des cellules depuis le fichier
+    if (!grille->chargerDepuisFichier("input.txt")) {
+        std::cerr << "ERREUR : Échec du chargement des données depuis input.txt" << std::endl;
+    }
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(gridWidth * cellSize, gridHeight * cellSize), "Game of Life (SFML)");
-    window.setFramerateLimit(10);  // 10 itérations par seconde
+    initializeGrid(); // Initialiser d'abord pour avoir les dimensions correctes
+
+    if (grille == nullptr) return -1;
+
+    // Créer la fenêtre en fonction de la taille réelle de la grille chargée
+    sf::RenderWindow window(sf::VideoMode(grille->getLargeur() * cellSize, 
+                                          grille->getHauteur() * cellSize), 
+                            "Jeu de la Vie - Chargé depuis input.txt");
     
-    initializeGrid(); 
+    window.setFramerateLimit(5);
 
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
+            if (event.type == sf::Event::Closed) window.close();
+        }
+
+        grille->mettreAJour();
+
+        window.clear(sf::Color::Black);
+        sf::RectangleShape cellShape(sf::Vector2f(cellSize - 1.0f, cellSize - 1.0f));
+        cellShape.setFillColor(sf::Color::White);
+
+        for (int x = 0; x < grille->getLargeur(); ++x) {
+            for (int y = 0; y < grille->getHauteur(); ++y) {
+                if (grille->getCellule(x, y)) {
+                    cellShape.setPosition(x * cellSize, y * cellSize);
+                    window.draw(cellShape);
+                }
             }
         }
-
-        // Mettre à jour la grille à chaque itération
-        if (grille != nullptr) {
-            grille->mettreAJour();
-        }
-
-        renderGrid(window);
+        window.display();
     }
 
-    // Libérer la mémoire
-    if (grille != nullptr) {
-        delete grille;
-    }
-
+    delete grille;
     return 0;
 }
