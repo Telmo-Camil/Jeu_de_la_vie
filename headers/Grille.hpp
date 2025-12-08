@@ -5,6 +5,7 @@
 #include <string>
 #include <ostream>
 
+#include "EtatObstacle.hpp"
 #include "Cellule.hpp"
 #include "EtatVivant.hpp"
 #include "EtatMort.hpp"
@@ -37,7 +38,9 @@ public:
     bool getCellule(int x, int y) const;
     void setCellule(int x, int y, bool etat);
     
-    // Opérateur de comparaison pour les tests
+    // NOUVELLE MÉTHODE : Accès au pointeur de cellule pour le rendu graphique
+    Cellule* getCellulePtr(int x, int y) const;
+    
     bool operator==(const Grille& autre) const;
 };
 

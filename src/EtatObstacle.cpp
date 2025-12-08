@@ -1,6 +1,9 @@
 #include "EtatObstacle.hpp"
 #include "EtatCellule.hpp"
 
+bool EtatObstacle::estObstacle() const{
+    return true;
+}
 
 bool EtatObstacle::estVivante() const {
     return false; 

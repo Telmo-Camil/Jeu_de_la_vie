@@ -6,6 +6,9 @@
 Cellule::Cellule() : etatActuelle(new EtatMort()) {
 }
 
+Cellule::~Cellule() {
+    delete etatActuelle;
+}
 
 void Cellule::setEtat(EtatCellule* nouvelEtat) {
     if (etatActuelle != nullptr) {
@@ -15,21 +18,12 @@ void Cellule::setEtat(EtatCellule* nouvelEtat) {
 }
 
 bool Cellule::estVivante() {
-    if (etatActuelle != nullptr) {
-        return etatActuelle->estVivante();
-    }
-    return false;
+    return (etatActuelle != nullptr) && etatActuelle->estVivante();
 }
 
 void Cellule::definirProchainEtat(int nbVoisinsVivants) {
     if (etatActuelle != nullptr) {
         EtatCellule* prochainEtat = etatActuelle->calculerProchainEtat(nbVoisinsVivants);
-        
-      
         setEtat(prochainEtat);
     }
-}
-
-Cellule::~Cellule() {
-    delete etatActuelle;
 }

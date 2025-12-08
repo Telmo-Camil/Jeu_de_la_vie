@@ -50,8 +50,7 @@ void ModeSimulation::lancerGraphique(Grille& grille)
 {
     std::cout << "Mode graphique non implémenté, mais appelé correctement !" << std::endl;
 
-    // Si tu utilises SFML, SDL, Qt ou autre → mettre le code ici
-    // Exemple placeholder :
+    
     for (int i = 0; i < maxIterations; i++)
     {
         grille.mettreAJour();

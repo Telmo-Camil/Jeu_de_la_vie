@@ -13,8 +13,9 @@ class Cellule {
         void setEtat(EtatCellule* nouvelEtat);
         bool estVivante();
         void definirProchainEtat(int nbVoisinsVivants);
-
+        
+        // Accesseur pour permettre le dynamic_cast dans main.cpp
+        EtatCellule* getEtat() const { return etatActuelle; }
 };
-
 
 #endif

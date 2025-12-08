@@ -3,6 +3,10 @@
 #include "EtatCellule.hpp"
 
 
+bool EtatMort::estObstacle() const{
+    return false;
+}
+
 bool EtatMort::estVivante() const {
     return false; 
 }
