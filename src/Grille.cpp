@@ -93,6 +93,7 @@ bool Grille::mettreAJour()
             cellules[y][x]->definirProchainEtat(voisins[y * largeur + x]);
             if (cellules[y][x]->estVivante() != vivanteAvant) aChange = true;
         }
+        sortie << "\n";
     }
     return aChange;
 }
